@@ -6,7 +6,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ScreenGui, ArrowsContainer, HitRemote, AutoplayerFrame, ToggleButton, MainFrame, TogglePlayerBtn, AutoplayerStatusLabel
 
--- 1. Setup (Attempt to find all necessary Roblox services and objects)
 local function setupServices()
     local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not PlayerGui then return false end
@@ -21,7 +20,6 @@ local function setupServices()
     return true
 end
 
--- 2. Core Autoplayer Logic
 local function sendHit(index) HitRemote:FireServer(index) end
 
 local function AutoplayerLoop()
@@ -32,7 +30,6 @@ local function AutoplayerLoop()
             local nearestNote = nil
             local minDistance = _G.Settings.Distance + 1
             for _, note in ipairs(Lane:GetChildren()) do
-                -- Check for Note, Hold, or HoldEnd to catch all types
                 if note:IsA("ImageLabel") and (note.Name == "Note" or note.Name == "Hold" or note.Name == "HoldEnd") then
                     local noteDistance = math.abs(note.Position.Y.Scale - 0.5)
                     if noteDistance < minDistance then
@@ -41,42 +38,38 @@ local function AutoplayerLoop()
                     end
                 end
             end
-            -- Execute hit if the note is close enough
             if nearestNote and minDistance <= _G.Settings.Distance / 1000 then sendHit(i) end
         end
     end
 end
 RunService.Heartbeat:Connect(AutoplayerLoop)
 
--- 3. GUI Functions and Setup
 local function updateToggleStatus()
     if AutoplayerStatusLabel then
         if _G.Settings.AutoNotes then
             AutoplayerStatusLabel.Text = "Status: ON"
-            AutoplayerStatusLabel.TextColor3 = Color3.fromRGB(80, 255, 80) -- Green
+            AutoplayerStatusLabel.TextColor3 = Color3.fromRGB(80, 255, 80)
         else
             AutoplayerStatusLabel.Text = "Status: OFF"
-            AutoplayerStatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80) -- Red
+            AutoplayerStatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
         end
     end
 end
 
 local function createGUI()
-    -- Main ScreenGui
     local Gui = Instance.new("ScreenGui")
     Gui.Name = "AutoplayerGUI"
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = LocalPlayer:FindFirstChild("PlayerGui")
 
-    -- Main Container Frame (Moveable)
     AutoplayerFrame = Instance.new("Frame")
     AutoplayerFrame.Name = "AutoplayerFrame"
-    AutoplayerFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- Dark Background
+    AutoplayerFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     AutoplayerFrame.BorderSizePixel = 0
     AutoplayerFrame.Size = UDim2.new(0, 200, 0, 150)
-    AutoplayerFrame.Position = UDim2.new(0.05, 0, 0.4, 0) -- Start near the middle-left
-    AutoplayerFrame.Active = true -- Important for dragging
-    AutoplayerFrame.Draggable = false -- Manual drag handled below
+    AutoplayerFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+    AutoplayerFrame.Active = true
+    AutoplayerFrame.Draggable = false
     AutoplayerFrame.ClipsDescendants = true
     AutoplayerFrame.Parent = Gui
 
@@ -84,7 +77,6 @@ local function createGUI()
     UICorner.CornerRadius = UDim.new(0, 8)
     UICorner.Parent = AutoplayerFrame
 
-    -- Header/Title Bar
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -104,7 +96,6 @@ local function createGUI()
     Title.Position = UDim2.new(0, 10, 0, 0)
     Title.Parent = Header
 
-    -- Main Content Frame
     MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainContent"
     MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -120,7 +111,6 @@ local function createGUI()
     UIListLayout.FillDirection = Enum.FillDirection.Vertical
     UIListLayout.Parent = MainFrame
 
-    -- Status Label
     AutoplayerStatusLabel = Instance.new("TextLabel")
     AutoplayerStatusLabel.Name = "StatusLabel"
     AutoplayerStatusLabel.Text = "Status: OFF"
@@ -131,7 +121,6 @@ local function createGUI()
     AutoplayerStatusLabel.Size = UDim2.new(1, -20, 0, 20)
     AutoplayerStatusLabel.Parent = MainFrame
     
-    -- Toggle Autoplayer Button
     TogglePlayerBtn = Instance.new("TextButton")
     TogglePlayerBtn.Name = "TogglePlayerButton"
     TogglePlayerBtn.Text = "Toggle Autoplayer"
@@ -151,7 +140,6 @@ local function createGUI()
         updateToggleStatus()
     end)
     
-    -- Open/Close Button (The small button that hides/shows the UI)
     ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "OpenCloseButton"
     ToggleButton.Text = "Toggle UI"
@@ -160,20 +148,18 @@ local function createGUI()
     ToggleButton.Font = Enum.Font.SourceSans
     ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     ToggleButton.Size = UDim2.new(0, 75, 0, 25)
-    ToggleButton.Position = UDim2.new(0.5, -37.5, 0.9, 0) -- Bottom center of the screen
+    ToggleButton.Position = UDim2.new(0.5, -37.5, 0.9, 0)
     ToggleButton.Parent = Gui 
 
     ToggleButton.MouseButton1Click:Connect(function()
         MainFrame.Visible = not MainFrame.Visible
-        -- Adjust size when closed to hide content
         if MainFrame.Visible then
             AutoplayerFrame.Size = UDim2.new(0, 200, 0, 150)
         else
-            AutoplayerFrame.Size = UDim2.new(0, 200, 0, 25) -- Only show the header
+            AutoplayerFrame.Size = UDim2.new(0, 200, 0, 25)
         end
     end)
     
-    -- Dragging Logic (Manual drag for mobile compatibility)
     local dragging = false
     local dragStart = Vector2.new(0, 0)
     local startPos = UDim2.new(0, 0, 0, 0)
@@ -207,13 +193,9 @@ local function createGUI()
     UserInputService.InputChanged:Connect(onInputChanged)
     UserInputService.InputEnded:Connect(onInputEnded)
     
-    updateToggleStatus() -- Initialize status text
+    updateToggleStatus()
 end
 
--- 4. Initialization
 if setupServices() then
     createGUI()
-else
-    -- Fallback message for debugging (will only show in the executor's console)
-    warn("FNF Autoplayer GUI: Could not find necessary game services (MainGui, Remotes, etc.).")
 end
